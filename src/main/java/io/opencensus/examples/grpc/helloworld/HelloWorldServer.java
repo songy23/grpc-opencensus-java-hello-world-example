@@ -27,10 +27,6 @@ import io.opencensus.common.Duration;
 import io.opencensus.common.Scope;
 import io.opencensus.contrib.grpc.metrics.RpcViews;
 import io.opencensus.contrib.zpages.ZPageHandlers;
-import io.opencensus.exporter.stats.prometheus.PrometheusStatsCollector;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
-import io.opencensus.exporter.trace.logging.LoggingTraceExporter;
 import io.opencensus.exporter.trace.stackdriver.StackdriverTraceConfiguration;
 import io.opencensus.exporter.trace.stackdriver.StackdriverTraceExporter;
 import io.opencensus.trace.AttributeValue;
@@ -49,6 +45,8 @@ public class HelloWorldServer {
   private static final Logger logger = Logger.getLogger(HelloWorldServer.class.getName());
 
   private static final Tracer tracer = Tracing.getTracer();
+
+  private static final String DEFAULT_ENDPOINT = "localhost:55678";
 
   private final int serverPort;
   private Server server;
@@ -116,35 +114,19 @@ public class HelloWorldServer {
   public static void main(String[] args) throws IOException, InterruptedException {
     // Add final keyword to pass checkStyle.
     final int serverPort = getPortOrDefaultFromArgs(args, 0, 50051);
-    final String cloudProjectId = getStringOrDefaultFromArgs(args, 1, null);
-    final int zPagePort = getPortOrDefaultFromArgs(args, 2, 3000);
-    final int prometheusPort = getPortOrDefaultFromArgs(args, 3, 9090);
+    final int zPagePort = getPortOrDefaultFromArgs(args, 1, 3000);
+    String endPoint = getStringOrDefaultFromArgs(args, 2, DEFAULT_ENDPOINT);
 
     // Registers all RPC views. For demonstration all views are registered. You may want to
     // start with registering basic views and register other views as needed for your application.
     RpcViews.registerAllViews();
 
-    // Registers logging trace exporter.
-    LoggingTraceExporter.register();
-
     // Starts a HTTP server and registers all Zpages to it.
     ZPageHandlers.startHttpServerAndRegisterAll(zPagePort);
     logger.info("ZPages server starts at localhost:" + zPagePort);
 
-    // Registers Stackdriver exporters.
-    if (cloudProjectId != null) {
-      StackdriverTraceExporter.createAndRegister(
-          StackdriverTraceConfiguration.builder().setProjectId(cloudProjectId).build());
-      StackdriverStatsExporter.createAndRegister(
-          StackdriverStatsConfiguration.builder()
-              .setProjectId(cloudProjectId)
-              .setExportInterval(Duration.create(60, 0))
-              .build());
-    }
-
-    // Register Prometheus exporters and export metrics to a Prometheus HTTPServer.
-    PrometheusStatsCollector.createAndRegister();
-    HTTPServer prometheusServer = new HTTPServer(prometheusPort, true);
+    //  Registers ocagent exporter.
+    HelloWorldUtils.registerAgentExporters(endPoint);
 
     // Start the RPC server. You shouldn't see any output from gRPC before this.
     logger.info("gRPC starting.");

@@ -16,6 +16,11 @@
 
 package io.opencensus.examples.grpc.helloworld;
 
+import io.opencensus.common.Duration;
+import io.opencensus.exporter.metrics.ocagent.OcAgentMetricsExporter;
+import io.opencensus.exporter.metrics.ocagent.OcAgentMetricsExporterConfiguration;
+import io.opencensus.exporter.trace.ocagent.OcAgentTraceExporter;
+import io.opencensus.exporter.trace.ocagent.OcAgentTraceExporterConfiguration;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -23,6 +28,10 @@ import javax.annotation.Nullable;
 final class HelloWorldUtils {
 
   private static final Logger logger = Logger.getLogger(HelloWorldUtils.class.getName());
+
+  private static final String SERVICE_NAME = "ocagent-java-exporter-quickstart";
+  private static final Duration RETRY_INTERVAL = Duration.create(10, 0);
+  private static final Duration EXPORT_INTERVAL = Duration.create(5, 0);
 
   static int getPortOrDefaultFromArgs(String[] args, int index, int defaultPort) {
     int portNumber = defaultPort;
@@ -44,6 +53,25 @@ final class HelloWorldUtils {
       s = args[index];
     }
     return s;
+  }
+
+  static void registerAgentExporters(String endPoint) {
+    OcAgentTraceExporter.createAndRegister(
+        OcAgentTraceExporterConfiguration.builder()
+            .setEndPoint(endPoint)
+            .setServiceName(SERVICE_NAME)
+            .setUseInsecure(true)
+            .setEnableConfig(false)
+            .build());
+
+    OcAgentMetricsExporter.createAndRegister(
+        OcAgentMetricsExporterConfiguration.builder()
+            .setEndPoint(endPoint)
+            .setServiceName(SERVICE_NAME)
+            .setUseInsecure(true)
+            .setRetryInterval(RETRY_INTERVAL)
+            .setExportInterval(EXPORT_INTERVAL)
+            .build());
   }
 
   private HelloWorldUtils() {}

@@ -37,7 +37,7 @@ mvn package appassembler:assemble
 ```
 
 Available pages:
-* For tracing page go to [localhost:8080/tracez][ZPagesTraceZLink]. 
+* For tracing page go to [localhost:8080/tracez][ZPagesTraceZLink].
 * For tracing config page go to [localhost:8080/traceconfigz][ZPagesTraceConfigZLink].
 * For RPC stats page go to [localhost:8080/rpcz][ZPagesRpcZLink].
 * For stats and measures on all registered views go to [localhost:8080/statsz][ZPagesStatsZLink].
@@ -66,24 +66,21 @@ will be used:
 
 * host and serverPort will be "localhost:50051"
 * user will be "world"
-* cloudProjectId will be null (which means no stats/spans will be exported to Stackdriver)
 * server zPagePort will be 3000
 * client zPagePort will be 3001
-* Prometheus port will be 9090
-
 
 However, if you want to specify any of these arguements, please make sure they are in order.
 
 ### Gradle
 ```bash
-./build/install/opencensus-examples/bin/HelloWorldServer serverPort cloudProjectId zPagePort prometheusPort
-./build/install/opencensus-examples/bin/HelloWorldClient user host serverPort cloudProjectId zPagePort
+./build/install/opencensus-examples/bin/HelloWorldServer serverPort zPagePort
+./build/install/opencensus-examples/bin/HelloWorldClient user host serverPort zPagePort
 ```
 
 ### Maven
 ```bash
-./target/appassembler/bin/HelloWorldServer serverPort cloudProjectId zPagePort prometheusPort
-./target/appassembler/bin/HelloWorldClient user host serverPort cloudProjectId zPagePort
+./target/appassembler/bin/HelloWorldServer serverPort zPagePort
+./target/appassembler/bin/HelloWorldClient user host serverPort zPagePort
 ```
 
 ## To run "Repl" example
@@ -134,7 +131,7 @@ Traces from both client and server can be viewed in their respective logs on con
 Stats are available from Prometheus server running at
 - http://localhost:9091/metrics - for client stats
 - http://localhost:9090/metrics - for server stats
-  
+
 
 ### Gradle
 ```bash

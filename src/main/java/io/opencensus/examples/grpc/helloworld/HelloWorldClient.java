@@ -29,7 +29,6 @@ import io.opencensus.contrib.zpages.ZPageHandlers;
 import io.opencensus.exporter.stats.prometheus.PrometheusStatsCollector;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
-import io.opencensus.exporter.trace.logging.LoggingTraceExporter;
 import io.opencensus.exporter.trace.stackdriver.StackdriverTraceConfiguration;
 import io.opencensus.exporter.trace.stackdriver.StackdriverTraceExporter;
 import io.opencensus.trace.SpanBuilder;
@@ -47,6 +46,8 @@ public class HelloWorldClient {
   private static final Logger logger = Logger.getLogger(HelloWorldClient.class.getName());
 
   private static final Tracer tracer = Tracing.getTracer();
+
+  private static final String DEFAULT_ENDPOINT = "localhost:55678";
 
   private final ManagedChannel channel;
   private final GreeterGrpc.GreeterBlockingStub blockingStub;
@@ -105,8 +106,8 @@ public class HelloWorldClient {
     final String user = getStringOrDefaultFromArgs(args, 0, "world");
     final String host = getStringOrDefaultFromArgs(args, 1, "localhost");
     final int serverPort = getPortOrDefaultFromArgs(args, 2, 50051);
-    final String cloudProjectId = getStringOrDefaultFromArgs(args, 3, null);
-    final int zPagePort = getPortOrDefaultFromArgs(args, 4, 3001);
+    final int zPagePort = getPortOrDefaultFromArgs(args, 3, 3001);
+    String endPoint = getStringOrDefaultFromArgs(args, 4, DEFAULT_ENDPOINT);
 
     // Registers all RPC views. For demonstration all views are registered. You may want to
     // start with registering basic views and register other views as needed for your application.
@@ -116,22 +117,8 @@ public class HelloWorldClient {
     ZPageHandlers.startHttpServerAndRegisterAll(zPagePort);
     logger.info("ZPages server starts at localhost:" + zPagePort);
 
-    // Registers logging trace exporter.
-    LoggingTraceExporter.register();
-
-    // Registers Stackdriver exporters.
-    if (cloudProjectId != null) {
-      StackdriverTraceExporter.createAndRegister(
-          StackdriverTraceConfiguration.builder().setProjectId(cloudProjectId).build());
-      StackdriverStatsExporter.createAndRegister(
-          StackdriverStatsConfiguration.builder()
-              .setProjectId(cloudProjectId)
-              .setExportInterval(Duration.create(60, 0))
-              .build());
-    }
-
-    // Register Prometheus exporters and export metrics to a Prometheus HTTPServer.
-    PrometheusStatsCollector.createAndRegister();
+    //  Registers ocagent exporter.
+    HelloWorldUtils.registerAgentExporters(endPoint);
 
     HelloWorldClient client = new HelloWorldClient(host, serverPort);
     try {
@@ -146,6 +133,7 @@ public class HelloWorldClient {
         Thread.sleep(10000);
       } catch (InterruptedException e) {
         logger.info("Exiting HelloWorldClient...");
+        System.exit(0);
       }
     }
   }
